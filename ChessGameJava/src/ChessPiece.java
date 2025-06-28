@@ -35,41 +35,51 @@ public abstract class ChessPiece extends JButton {
         // We check if there is currently another piece selected when we click
         ChessPiece selected = board.getSelectedPiece();
 
-        if (selected == null || selected.isWhite()) {
+        if (selected == null) {
             // If there's no piece selected we'll set this one to be,
             // but only if its color matches the color of the current player's pieces
             if (this.isWhite() == board.isWhiteTurn()) {
-                board.clearHighlights();
-                board.setSelectedPiece(this);
-                currentCell.setHighlighted(true);
-
-                for (Cell moveCell : getLegalMoves(board.getCells())) {
-                    moveCell.setHighlighted(true);
-                }
-
-                board.repaint();
+                selectAndHighlightLegalMoves(board);
             }
-        } else {
-            // If another piece is already selected, then we check if this piece is an enemy that can captured
-            if (this != selected && this.isWhite() != selected.isWhite()) {
-                Cell myCell = this.getCurrentCell(); // We find the cell where the enemy piece is place on
-                if (myCell.isHighlighted()) { // If it is highlighted, then we can capture it
-                    selected.moveTo(myCell); // Capture the cell
-                    board.setSelectedPiece(null);
-                    board.clearHighlights();
-                    board.repaint();
-                    return;
-                }
-            }
+            return;
+        }
 
-            // Otherwise, we either clicked on the same piece or on an invalid position
-            // In this case, we reset all selections and highlights
-            if (selected == this) {
-                board.clearHighlights();
+        // If another piece is already selected, then we check if this piece is an enemy that can captured
+        if (this != selected && this.isWhite() != selected.isWhite()) {
+            Cell myCell = this.getCurrentCell(); // We find the cell where the enemy piece is place on
+            if (myCell.isHighlighted()) { // If it is highlighted, then we can capture it
+                selected.moveTo(myCell); // Capture the cell
                 board.setSelectedPiece(null);
+                board.clearHighlights();
                 board.repaint();
+                return;
             }
         }
+
+        // Selecting a different piece of the same color
+        if (this != selected && this.isWhite() == board.isWhiteTurn()) {
+            selectAndHighlightLegalMoves(board);
+            return;
+        }
+
+        // Deselecting current piece
+        if (selected == this) {
+            board.clearHighlights();
+            board.setSelectedPiece(null);
+            board.repaint();
+        }
+
+    }
+
+    private void selectAndHighlightLegalMoves(ChessBoardPanel board) {
+        board.clearHighlights();
+        board.setSelectedPiece(this);
+        currentCell.setHighlighted(true);
+
+        for (Cell moveCell : getLegalMoves(board.getCells())) {
+            moveCell.setHighlighted(true);
+        }
+        board.repaint();
     }
 
     public void moveTo(Cell targetCell) {
@@ -121,5 +131,29 @@ public abstract class ChessPiece extends JButton {
         return isWhite;
     }
 
+    protected static boolean isWithinBounds(int row, int col) {
+        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    }
+
+    /**
+     * We use this method to find the legal moves of a certain Chess Piece
+     * @param board The matrix of cells on the Chess Board
+     * @return A list of cells where the piece calling this method can move
+     */
     public abstract java.util.List<Cell> getLegalMoves(Cell[][] board);
+
+
+    /**
+     * We use this method to find the capturing cells of a certain Chess Piece.<br><br>
+     * In usual cases, the movement cells will correspond with the capturing ones.
+     * But there are special scenarios (ex. Pawns) where a piece's movement differs from its capturing movement.<br>
+     * In these scenarios, the method should be overridden.<br><br>
+     * This will prove useful later on, when we will try to prevent the King from moving into attacked cells.
+     * @param board The matrix of cells on the Chess Board
+     * @return A list of cells where the piece calling this method could capture another piece
+     */
+    public java.util.List<Cell> getAttackedCells(Cell[][] board) {
+        return getLegalMoves(board);
+    }
+
 }

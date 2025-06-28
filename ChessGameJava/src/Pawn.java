@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Pawn extends ChessPiece {
+
     public Pawn(Cell startingCell, boolean isWhite) {
         super(startingCell, isWhite, isWhite ? "/ChessSprites/wP.png" : "/ChessSprites/bP.png");
     }
@@ -50,7 +51,23 @@ public class Pawn extends ChessPiece {
         return legalMoves;
     }
 
-    private boolean isWithinBounds(int row, int col) {
-        return row >= 0 && row < 8 && col >= 0 && col < 8;
+    @Override
+    public List<Cell> getAttackedCells(Cell[][] board) {
+        List<Cell> attacked = new ArrayList<>();
+
+        int dir = isWhite() ? -1 : 1;
+        int row = currentCell.getRow();
+        int col = currentCell.getCol();
+
+        for (int dc = -1; dc <= 1; dc += 2) {
+            int newRow = row + dir;
+            int newCol = col + dc;
+            if (isWithinBounds(newRow, newCol)) {
+                attacked.add(board[newRow][newCol]);
+            }
+        }
+
+        return attacked;
     }
+
 }

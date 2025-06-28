@@ -19,7 +19,7 @@ public class ChessBoardPanel extends JPanel {
         setLayout(null);
         initCells();
         initMouseListener();
-        addTestPawns();
+        addChessPieces();
     }
 
     private void initCells() {
@@ -101,7 +101,35 @@ public class ChessBoardPanel extends JPanel {
         });
     }
 
-    private void addTestPawns() {
+    /**
+     * Checks whether a given cell is under attack by any pieces of the specified color.
+     *
+     * @param cell The target cell to check.
+     * @param byWhite True to check for attacks by white pieces, false for black.
+     * @return True if the cell is attacked, false otherwise.
+     */
+    public boolean isCellUnderAttack(Cell cell, boolean byWhite) {
+        for (int row = 0; row < BOARD_HEIGHT; row++) {
+            for (int col = 0; col < BOARD_WIDTH; col++) {
+                ChessPiece piece = cells[row][col].getOccupyingPiece();
+                if (piece != null && piece.isWhite() == byWhite) {
+                    java.util.List<Cell> moves = piece.getAttackedCells(cells);
+                    if (moves.contains(cell)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
+    private void addChessPieces() {
+        addPawns();
+        addKings();
+    }
+
+    private void addPawns() {
         for (char col = 'a'; col <= 'h'; col++) {
             String notationWhite = col + "2";
             Cell startingCell = getCellByNotation(notationWhite);
@@ -117,13 +145,22 @@ public class ChessBoardPanel extends JPanel {
                 add(blackPawn);
             }
         }
+        repaint();
+    }
 
-        Cell startingCell = getCellByNotation("d4");
-        if (startingCell != null) {
-            Pawn whitePawn = new Pawn(startingCell, true);
-            add(whitePawn);
+    private void addKings() {
+        Cell whiteKingCell = getCellByNotation("e1");
+        Cell blackKingCell = getCellByNotation("e8");
+
+        if (whiteKingCell != null) {
+            King whiteKing = new King(whiteKingCell, true);
+            add(whiteKing);
         }
 
+        if (blackKingCell != null) {
+            King blackKing = new King(blackKingCell, false);
+            add(blackKing);
+        }
         repaint();
     }
 
