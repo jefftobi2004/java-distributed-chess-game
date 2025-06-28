@@ -123,10 +123,76 @@ public class ChessBoardPanel extends JPanel {
         return false;
     }
 
+    /**
+     * Finds the cell where the King of the specified color is located.
+     *
+     * @param forWhite true -> white King, false -> black King
+     * @return the Cell containing the King, or null if not found
+     */
+    public Cell findKingCell(boolean forWhite) {
+        for (int row = 0; row < BOARD_HEIGHT; row++) {
+            for (int col = 0; col < BOARD_WIDTH; col++) {
+                ChessPiece piece = cells[row][col].getOccupyingPiece();
+                if (piece instanceof King && piece.isWhite() == forWhite) {
+                    return cells[row][col];
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Checks if the King of the specified color is currently under attack.
+     *
+     * @param forWhite true to check if the white King is in check, false for the black King
+     * @return true if the King is under attack (in check), false otherwise
+     */
+    public boolean isInCheck(boolean forWhite) {
+        Cell kingCell = findKingCell(forWhite);
+        if (kingCell == null) {
+            System.out.println("No king cell found !!!");
+            return false;
+        } else {
+            System.out.println("Is king under attack: " + isCellUnderAttack(kingCell, !forWhite));
+            return isCellUnderAttack(kingCell, !forWhite);
+        }
+
+    }
+
+    /**
+     * Simulates moving a piece to a destination cell and checks whether the player's King
+     * remains safe (not in check) after this hypothetical move.
+     *
+     * This method temporarily updates the board state, checks for the condition, then restores the board.
+     * It will not result in any visual clutter since we are not repainting
+     *
+     * @param piece the ChessPiece to move
+     * @param destination the Cell to move the piece to
+     * @return true if the move would solve the check,
+     *         false if the King would still be in check after the move
+     */
+    public boolean simulatedMoveAvoidsCheck(ChessPiece piece, Cell destination) {
+
+        Cell original = piece.getCurrentCell();
+        ChessPiece captured = destination.getOccupyingPiece();
+
+        original.setOccupyingPiece(null);
+        piece.setCurrentCell(destination);
+        destination.setOccupyingPiece(piece);
+
+        boolean stillInCheck = isInCheck(piece.isWhite());
+
+        piece.setCurrentCell(original);
+        destination.setOccupyingPiece(captured);
+
+        return !stillInCheck;
+    }
+
 
     private void addChessPieces() {
-        addPawns();
-        addKings();
+        addPawns();     addKings();
+        addKnights();   addBishops();
+        addRooks();     addQueens();
     }
 
     private void addPawns() {
@@ -160,6 +226,92 @@ public class ChessBoardPanel extends JPanel {
         if (blackKingCell != null) {
             King blackKing = new King(blackKingCell, false);
             add(blackKing);
+        }
+        repaint();
+    }
+
+    private void addKnights() {
+        // White knights at b1, g1
+        String[] whiteNotations = {"b1", "g1"};
+        for (String notation : whiteNotations) {
+            Cell cell = getCellByNotation(notation);
+            if (cell != null) {
+                Knight knight = new Knight(cell, true);
+                add(knight);
+            }
+        }
+
+        // Black knights at b8, g8
+        String[] blackNotations = {"b8", "g8"};
+        for (String notation : blackNotations) {
+            Cell cell = getCellByNotation(notation);
+            if (cell != null) {
+                Knight knight = new Knight(cell, false);
+                add(knight);
+            }
+        }
+        repaint();
+    }
+
+    private void addBishops() {
+        // White bishops at c1, f1
+        String[] whiteNotations = {"c1", "f1"};
+        for (String notation : whiteNotations) {
+            Cell cell = getCellByNotation(notation);
+            if (cell != null) {
+                Bishop bishop = new Bishop(cell, true);
+                add(bishop);
+            }
+        }
+
+        // Black bishops at c8, f8
+        String[] blackNotations = {"c8", "f8"};
+        for (String notation : blackNotations) {
+            Cell cell = getCellByNotation(notation);
+            if (cell != null) {
+                Bishop bishop = new Bishop(cell, false);
+                add(bishop);
+            }
+        }
+        repaint();
+    }
+
+    private void addRooks() {
+        // White bishops at a1, h1
+        String[] whiteNotations = {"a1", "h1"};
+        for (String notation : whiteNotations) {
+            Cell cell = getCellByNotation(notation);
+            if (cell != null) {
+                Rook rook = new Rook(cell, true);
+                add(rook);
+            }
+        }
+
+        // Black bishops at a8, h8
+        String[] blackNotations = {"a8", "h8"};
+        for (String notation : blackNotations) {
+            Cell cell = getCellByNotation(notation);
+            if (cell != null) {
+                Rook rook = new Rook(cell, false);
+                add(rook);
+            }
+        }
+        repaint();
+    }
+
+    private void addQueens() {
+
+        Cell whiteQueenCell = getCellByNotation("d1");
+        Cell blackQueenCell = getCellByNotation("d8");
+
+        if (whiteQueenCell != null) {
+            Queen whiteQueen = new Queen(whiteQueenCell, true);
+            add(whiteQueen);
+        }
+
+        if (blackQueenCell != null) {
+            Queen blackQueen = new Queen(blackQueenCell, false);
+            add(blackQueen);
         }
         repaint();
     }

@@ -78,8 +78,10 @@ public abstract class ChessPiece extends JButton {
 
         for (Cell moveCell : getLegalMoves(board.getCells())) {
             moveCell.setHighlighted(true);
+            System.out.print(moveCell.getNotation());
         }
         board.repaint();
+        System.out.println();
     }
 
     public void moveTo(Cell targetCell) {

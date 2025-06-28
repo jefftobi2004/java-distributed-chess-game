@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.*;
 
 public class Pawn extends ChessPiece {
 
@@ -14,12 +15,15 @@ public class Pawn extends ChessPiece {
         int col = currentCell.getCol();
         int direction = isWhite ? -1 : 1;
 
+        ChessBoardPanel chessBoard = (ChessBoardPanel) SwingUtilities.getAncestorOfClass(ChessBoardPanel.class, this);
+        if (chessBoard == null) return legalMoves;
+
         // Moving forward one step
         int nextRow = row + direction;
         if (isWithinBounds(nextRow, col)) {
             Cell validCell = board[nextRow][col];
 
-            if(validCell.getOccupyingPiece() == null) {
+            if(validCell.getOccupyingPiece() == null && chessBoard.simulatedMoveAvoidsCheck(this, validCell)) {
                 legalMoves.add(validCell);
 
                 // Moving forward two steps if we are on the start position of a Pawn
@@ -27,7 +31,7 @@ public class Pawn extends ChessPiece {
                     int doubleMoveRow = row + 2 * direction;
                     if (isWithinBounds(doubleMoveRow, col)) {
                         validCell = board[doubleMoveRow][col];
-                        if(validCell.getOccupyingPiece() == null) {
+                        if(validCell.getOccupyingPiece() == null && chessBoard.simulatedMoveAvoidsCheck(this, validCell)) {
                             legalMoves.add(validCell);
                             }
                     }
@@ -42,7 +46,7 @@ public class Pawn extends ChessPiece {
             if (isWithinBounds(nextRow, captureCol)) {
                 Cell enemyCell = board[nextRow][captureCol];
                 ChessPiece occupant = enemyCell.getOccupyingPiece();
-                if (occupant != null && occupant.isWhite() != this.isWhite()) {
+                if (occupant != null && occupant.isWhite() != this.isWhite() && chessBoard.simulatedMoveAvoidsCheck(this, enemyCell)) {
                     legalMoves.add(enemyCell);
                 }
             }
