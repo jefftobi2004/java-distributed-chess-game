@@ -89,10 +89,12 @@ public class ChessBoardPanel extends JPanel {
                         Cell clickedCell = cells[row][col];
                         if (clickedCell.getBounds().contains(clickPoint)) {
                             if (clickedCell.isHighlighted() && selectedPiece != null) {
+
                                 selectedPiece.moveTo(clickedCell);
                                 setSelectedPiece(null);
                                 clearHighlights();
                                 repaint();
+
                             }
                         }
                     }
@@ -156,8 +158,65 @@ public class ChessBoardPanel extends JPanel {
             System.out.println("Is king under attack: " + isCellUnderAttack(kingCell, !forWhite));
             return isCellUnderAttack(kingCell, !forWhite);
         }
-
     }
+
+    /**
+     * Checks if one side has no more legal moves available.
+     * This is important for determining the state of a checkmate or stalemate.
+     * @param forWhite True to examine White’s legal moves; false for Black.
+     * @return true if at least one legal move exists for that side.
+     */
+    public boolean hasAnyLegalMoves(boolean forWhite) {
+        for (int row = 0; row < BOARD_HEIGHT; row++) {
+            for (int col = 0; col < BOARD_WIDTH; col++) {
+
+                ChessPiece p = cells[row][col].getOccupyingPiece();
+                if (p != null && p.isWhite() == forWhite) {
+                    if (!p.getLegalMoves(cells).isEmpty()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks the state or result of the game.
+     * This can be: 'In progress', 'Checkmate' or 'Stalemate'
+     * This method should be called immediately after switching the turn.
+     * Provides a dialog window for information
+     */
+    public void checkGameEnd() {
+
+        boolean inCheck = isInCheck(isWhiteTurn);
+        boolean hasMoves = hasAnyLegalMoves(isWhiteTurn);
+
+        // If the king is under check, and the ally pieces have no more legal moves left, we declare a Checkmate
+        if (inCheck && !hasMoves) {
+            clearHighlights();
+            JOptionPane.showMessageDialog(
+                    this,
+                    (isWhiteTurn ? "White" : "Black") + " is checkmated!\n" +
+                            (isWhiteTurn ? "Black" : "White") + " wins.",
+                    "Checkmate",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        }
+        // If the king is not under check, and the ally pieces have no more legal moves left, we declare a Stalemate or a Draw
+        else if (!inCheck && !hasMoves) {
+            clearHighlights();
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Stalemate! No legal moves remain.\nGame is a draw.",
+                    "Draw",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+        }
+        // Otherwise, we continue the game.
+    }
+
+
 
     /**
      * Simulates moving a piece to a destination cell and checks whether the player's King

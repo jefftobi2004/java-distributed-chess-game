@@ -46,7 +46,7 @@ public abstract class ChessPiece extends JButton {
 
         // If another piece is already selected, then we check if this piece is an enemy that can captured
         if (this != selected && this.isWhite() != selected.isWhite()) {
-            Cell myCell = this.getCurrentCell(); // We find the cell where the enemy piece is place on
+            Cell myCell = this.getCurrentCell(); // We find the cell where the enemy piece is placed on
             if (myCell.isHighlighted()) { // If it is highlighted, then we can capture it
                 selected.moveTo(myCell); // Capture the cell
                 board.setSelectedPiece(null);
@@ -85,6 +85,10 @@ public abstract class ChessPiece extends JButton {
     }
 
     public void moveTo(Cell targetCell) {
+
+        ChessBoardPanel board = (ChessBoardPanel) SwingUtilities.getAncestorOfClass(ChessBoardPanel.class, this);
+        if (board == null) return;
+
         // If the cell where we can move has an enemy piece on it, we need to eliminate it before moving
         ChessPiece enemy = targetCell.getOccupyingPiece();
         if (enemy != null && enemy.isWhite() != this.isWhite()) {
@@ -99,12 +103,16 @@ public abstract class ChessPiece extends JButton {
         // We move the piece to the new Cell
         setCurrentCell(targetCell);
 
+        // Treating Pawn Promoting
+        System.out.println("➡ about to checkForPromotion()");
+        checkForPromotion(board);
+        System.out.println("➡ returned from checkForPromotion()");
+
         // Changing the turn for the other color player and repainting the Panel
-        ChessBoardPanel board = (ChessBoardPanel) SwingUtilities.getAncestorOfClass(ChessBoardPanel.class, this);
-        if (board != null) {
-            board.switchTurn();
-            board.repaint();
-        }
+        System.out.println("I am switching turns");
+        board.switchTurn();
+        board.repaint();
+        board.checkGameEnd();
     }
 
     public void setCurrentCell(Cell newCell) {
@@ -115,6 +123,17 @@ public abstract class ChessPiece extends JButton {
         if (newCell != null) {
             newCell.setOccupyingPiece(this);
             centerOnCell();
+        }
+    }
+
+    public void checkForPromotion(ChessBoardPanel board) {
+
+        if (this instanceof Pawn) {
+            Pawn pawn = (Pawn) this;
+            int promotionRow = pawn.isWhite() ? 0 : 7;
+            if (pawn.getCurrentCell().getRow() == promotionRow) {
+                new PawnPromotion(pawn.isWhite(), pawn.getCurrentCell(), board);
+            }
         }
     }
 
